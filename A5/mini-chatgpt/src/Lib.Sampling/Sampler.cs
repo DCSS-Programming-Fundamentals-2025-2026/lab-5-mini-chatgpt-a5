@@ -38,8 +38,7 @@ namespace MiniChatGPT.Sampling
 
             for (int i = 0; i < idx.Length; i++)
             {
-                int originalIdx = idx[i];
-                topKProbs[i] = MathF.Exp(tempered[originalIdx]); 
+                topKProbs[i] = MathF.Exp(tempered[idx[i]]); 
             }
 
             ProbabilityNormalizer.Normalize(topKProbs);
