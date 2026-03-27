@@ -85,15 +85,83 @@ namespace Lib.Sampling.Tests
             int topK = 3;
             int seed = 42;
 
-            _sampler.Sample(probs, temperature, topK, seed);
+            _sampler.SampleWithSeed(probs, temperature, topK, seed); 
             var rng1 = _fakeMathOps.LastRng;
             int randomValue1 = rng1.Next();
 
-            _sampler.Sample(probs, temperature, topK, seed);
+            _sampler.SampleWithSeed(probs, temperature, topK, seed); 
             var rng2 = _fakeMathOps.LastRng;
             int randomValue2 = rng2.Next();
 
             Assert.That(randomValue1, Is.EqualTo(randomValue2), "Однаковий seed має генерувати однакову послідовність чисел");
+        }
+
+        [Test]
+        public void Sample_TemperatureIsZero_ThrowsException()
+        {
+            float[] probs = { 0.5f, 0.5f };
+
+            void RunWithZeroTemp()
+            {
+                _sampler.Sample(probs, 0f, 10);
+            }
+
+            Assert.Throws<ArgumentOutOfRangeException>(RunWithZeroTemp);
+        }
+
+        [Test]
+        public void Sample_TemperatureIsNegative_ThrowsException()
+        {
+            float[] probs = { 0.5f, 0.5f };
+
+            void RunWithNegativeTemp()
+            {
+                _sampler.Sample(probs, -1.5f, 10);
+            }
+
+            Assert.Throws<ArgumentOutOfRangeException>(RunWithNegativeTemp);
+        }
+
+        [Test]
+        public void Sample_TopKIsZero_ThrowsException()
+        {
+            float[] probs = { 0.5f, 0.5f };
+
+            void RunWithZeroTopK()
+            {
+                _sampler.Sample(probs, 1.0f, 0);
+            }
+
+            Assert.Throws<ArgumentOutOfRangeException>(RunWithZeroTopK);
+        }
+
+        [Test]
+        public void Sample_TopKIsNegative_ThrowsException()
+        {
+            float[] probs = { 0.5f, 0.5f };
+
+            void RunWithNegativeTopK()
+            {
+                _sampler.Sample(probs, 1.0f, -5);
+            }
+
+            Assert.Throws<ArgumentOutOfRangeException>(RunWithNegativeTopK);
+        }
+
+        [Test]
+        public void Sample_LowTemperature_MakesResponsesStricter()
+        {
+            int topK = 2;
+
+            float[] probs1 = { 0.2f, 0.8f };
+            _sampler.Sample(probs1, 1.0f, topK);
+            float chanceWithNormalTemp = _fakeMathOps.LastReceivedProbs[1];
+
+            float[] probs2 = { 0.2f, 0.8f };
+            _sampler.Sample(probs2, 0.5f, topK);
+            float chanceWithLowTemp = _fakeMathOps.LastReceivedProbs[1];
+
+            Assert.That(chanceWithLowTemp, Is.GreaterThan(chanceWithNormalTemp));
         }
     }
 

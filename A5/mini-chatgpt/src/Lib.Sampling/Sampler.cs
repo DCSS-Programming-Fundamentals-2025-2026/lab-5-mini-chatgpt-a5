@@ -22,12 +22,22 @@ namespace MiniChatGPT.Sampling
         {
             if (probs == null || probs.Length == 0)
             {
-                throw new ArgumentException("Масив ймовірностей є порожнім!");
+                throw new ArgumentException(nameof(probs), "Масив ймовірностей є порожнім!");
             }
 
             if (rng == null)
             {
                 rng = new Random();
+            }
+
+            if (temperature <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(temperature), "Температура має бути строго більшою за нуль!");
+            }
+
+            if (topK <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(topK), "Значення Top-K має бути строго більшим за нуль!");
             }
 
             float[] tempered = TemperatureScaler.Scale(probs, temperature);
@@ -48,13 +58,17 @@ namespace MiniChatGPT.Sampling
             return idx[selectedKIdx];
         }
 
-        public int Sample(float[] probs, float temperature, int topK, int? seed)
+        public int SampleWithSeed(float[] probs, float temperature, int topK, int? seed)
         {
-            Random? rng = null;
+            Random rng;
 
             if (seed.HasValue)
             {
                 rng = new Random(seed.Value);
+            }
+            else
+            {
+                rng = null; 
             }
 
             return Sample(probs, temperature, topK, rng);
